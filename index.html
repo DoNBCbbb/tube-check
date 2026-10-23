@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tube Check</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f7f7f8;
+    color: #1a1a1a;
+    padding: 16px 16px calc(env(safe-area-inset-bottom) + 90px);
+    line-height: 1.4;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+    color: #0d9488;
+  }
+  .subtitle {
+    font-size: 16px;
+    color: #555;
+    margin: 0;
+  }
+  .search-box {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 15px;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  button {
+    background: #0d9488;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 600;
+  }
+  button:active { background: #0f766e; }
+  .results {
+    margin-top: 16px;
+  }
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-left: 4px solid #f59e0b;
+  }
+  .card.safe { border-left-color: #10b981; }
+  .card.match { border-left-color: #ef4444; }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; font-size: 14px; color: #444; }
+  .disclaimer {
+    font-size: 13px;
+    color: #666;
+    background: #fffbeb;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+  .footer {
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    margin-top: 40px;
+    padding: 16px 0;
+  }
+  .footer a { color: #0d9488; }
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .filter-btn {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+    background: #e5e7eb;
+    color: #333;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .filter-btn.active { background: #0d9488; color: white; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Tube Check</h1>
+    <p class="subtitle">Quick checker for the October 2026 toothpaste recall</p>
+  </div>
+
+  <div class="search-box">
+    <label for="search">Search by brand, flavor, or keyword</label>
+    <input type="text" id="search" placeholder="e.g. Barbie, Hot Wheels, ice cream, whitening" autocomplete="off">
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="kids">Kids</button>
+      <button class="filter-btn" data-filter="adult">Adult</button>
+    </div>
+    <button id="checkBtn">Check</button>
+  </div>
+
+  <div id="results" class="results"></div>
+
+  <div class="disclaimer">
+    General info only, not professional advice. This tool lists products included in the voluntary Class II recall (CGMP deviations) reported by the FDA. Not every tube of a listed product is affected—check the lot number and expiration date against the official FDA enforcement report. If you have concerns, contact the manufacturer or your dentist.
+  </div>
+
+  <div class="footer">
+    Free from Fart Sprinkle Studios. Like it? Tip jar: <a href="https://payhip.com/b/804FN" target="_blank" rel="noopener">https://payhip.com/b/804FN</a>
+  </div>
+
+<script>
+const products = [
+  { name: "Brush Buddies Barbie Anticavity Fluoride Toothpaste, Bubble Gum, 4 oz", category: "kids", keywords: "barbie bubble gum brush buddies" },
+  { name: "Brush Buddies Hot Wheels Anticavity Fluoride Toothpaste, Strawberry, 4 oz", category: "kids", keywords: "hot wheels strawberry brush buddies" },
+  { name: "Brush Buddies Crayola Silly Scents Anticavity Fluoride Toothpaste, Bubble Gum, 4 oz", category: "kids", keywords: "crayola silly scents bubble gum brush buddies" },
+  { name: "Brush Buddies Crayola Silly Scents Anticavity Fluoride Toothpaste, Watermelon, 4 oz", category: "kids", keywords: "crayola silly scents watermelon brush buddies" },
+  { name: "Brush Buddies Crayola Silly Scents Anticavity Fluoride Toothpaste, Strawberry, 4 oz", category: "kids", keywords: "crayola silly scents strawberry brush buddies" },
+  { name: "Brush Buddies My Little Pony Scents Anticavity Fluoride Toothpaste, Bubble Gum, 4 oz", category: "kids", keywords: "my little pony mlp bubble gum brush buddies" },
+  { name: "Brush Buddies Vanilla Ice Cream Flavored Anticavity Fluoride Toothpaste, 3.5 oz", category: "kids", keywords: "vanilla ice cream brush buddies" },
+  { name: "Brush Buddies Mint Chocolate Chip Ice Cream Flavored Anticavity Fluoride Toothpaste, 3.5 oz", category: "kids", keywords: "mint chocolate chip ice cream brush buddies" },
+  { name: "Brush Buddies Cookies 'n Cream Ice Cream Flavored Anticavity Fluoride Toothpaste, 3.5 oz", category: "kids", keywords: "cookies n cream cookies and cream ice cream brush buddies" },
+  { name: "Brush Buddies Chocolate Ice Cream Flavored Anticavity Fluoride Toothpaste, 3.5 oz", category: "kids", keywords: "chocolate ice cream brush buddies" },
+  { name: "Brush Buddies Whitening Anticavity Fluoride Toothpaste with Baking Soda, Cool Mint, 3.5 oz", category: "adult", keywords: "whitening baking soda cool mint brush buddies" },
+  { name: "Brush Buddies Cavity Protection Anticavity Fluoride Toothpaste, Cool Mint, 2-pack", category: "adult", keywords: "cavity protection cool mint brush buddies bb" },
+  { name: "Brush Buddies Advanced Whitening Anticavity Fluoride Toothpaste, Peppermint, 3.5 oz", category: "adult", keywords: "advanced whitening peppermint brush buddies bb" },
+  { name: "evo Advanced Whitening Anticavity Fluoride Toothpaste, Peppermint, 3.5 oz", category: "adult", keywords: "evo advanced whitening peppermint" },
+  { name: "evo Sensitive Anticavity Fluoride Toothpaste, Sweet Mint, 3.5 oz", category: "adult", keywords: "evo sensitive sweet mint" },
+  { name: "ARU Gum Health Toothpaste, Soothing Mint, 3.5 oz", category: "adult", keywords: "aru gum health soothing mint" },
+  { name: "ARU Cavity Protection Toothpaste, Cool Mint, 3.5 oz", category: "adult", keywords: "aru cavity protection cool mint" }
+];
+
+let currentFilter = "all";
+
+function render(filterText = "") {
+  const results = document.getElementById("results");
+  const q = filterText.toLowerCase().trim();
+  let list = products.filter(p => currentFilter === "all" || p.category === currentFilter);
+  if (q) {
+    list = list.filter(p => p.name.toLowerCase().includes(q) || p.keywords.includes(q));
+  }
+  if (list.length === 0) {
+    results.innerHTML = '<div class="card safe"><h3>No matches found</h3><p>Your search did not match any of the 17 recalled products. Still check the official FDA list if unsure.</p></div>';
+    return;
+  }
+  results.innerHTML = list.map(p => `
+    <div class="card match">
+      <h3>${p.name}</h3>
+      <p>Included in the October 2026 Class II recall (CGMP deviations). Check lot number on the tube against the FDA enforcement report before use.</p>
+    </div>
+  `).join("");
+}
+
+document.getElementById("checkBtn").addEventListener("click", () => {
+  const val = document.getElementById("search").value;
+  render(val);
+});
+
+document.getElementById("search").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("checkBtn").click();
+  }
+});
+
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = btn.dataset.filter;
+    render(document.getElementById("search").value);
+  });
+});
+
+// Initial render of all
+render();
+</script>
+</body>
+</html>
